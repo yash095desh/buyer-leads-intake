@@ -106,6 +106,6 @@ model BuyerHistory {
   changedAt DateTime @default(now())
   diff      Json
 
-  buyer     Buyer    @relation(fields: [buyerId], references: [id])
-  user      User     @relation(fields: [changedBy], references: [id])
+  buyer     Buyer    @relation(fields: [buyerId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [changedBy], references: [id], onDelete: Cascade)
 }

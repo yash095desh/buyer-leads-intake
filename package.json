@@ -12,8 +12,10 @@
     "seed": "ts-node --project tsconfig.seed.json prisma/seed.ts"
   },
   "dependencies": {
+    "@clerk/nextjs": "^6.32.0",
     "@prisma/client": "^6.16.1",
     "@radix-ui/react-slot": "^1.2.3",
+    "axios": "^1.12.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "csv-parse": "^6.1.0",

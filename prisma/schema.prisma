@@ -19,8 +19,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-
-
 enum PropertyType {
   Apartment
   Villa
@@ -45,7 +43,7 @@ enum Purpose {
 enum Timeline {
   ZERO_TO_THREE_M      @map("0-3m")
   THREE_TO_SIX_M       @map("3-6m")
-  GREATER_THAN_SIX_M   @map("GT-6m")
+  GREATER_THAN_SIX_M   @map(">6m")
   Exploring
 }
 
@@ -67,6 +65,17 @@ enum Status {
   Dropped
 }
 
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String?
+  role      String   @default("user") 
+  buyers    Buyer[]  
+  histories BuyerHistory[] 
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 model Buyer {
   id           String     @id @default(uuid())
   fullName     String     @db.VarChar(80)
@@ -84,6 +93,7 @@ model Buyer {
   notes        String?    @db.Text
   tags         String[]
   ownerId      String
+  owner        User       @relation(fields: [ownerId], references: [id])
   updatedAt    DateTime   @updatedAt
 
   histories    BuyerHistory[]
@@ -97,5 +107,5 @@ model BuyerHistory {
   diff      Json
 
   buyer     Buyer    @relation(fields: [buyerId], references: [id])
+  user      User     @relation(fields: [changedBy], references: [id])
 }
-

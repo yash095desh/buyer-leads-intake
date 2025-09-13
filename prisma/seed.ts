@@ -18,7 +18,6 @@ const buyersData = [
       status: Status.New,
       notes: "Looking for a ready-to-move-in property",
       tags: ["premium", "urgent"],
-      ownerId: "owner-123"
     },
     {
       fullName: "Neha Verma",
@@ -35,7 +34,6 @@ const buyersData = [
       status: Status.Contacted,
       notes: "Interested in pet-friendly villas",
       tags: ["high-priority"],
-      ownerId: "owner-456"
     },
     {
       fullName: "Rohit Mehta",
@@ -52,7 +50,6 @@ const buyersData = [
       status: Status.Visited,
       notes: "Wants land for personal use",
       tags: ["land"],
-      ownerId: "owner-789"
     },
     {
       fullName: "Priya Kapoor",
@@ -69,7 +66,6 @@ const buyersData = [
       status: Status.Negotiation,
       notes: "Needs furnished office space",
       tags: ["corporate"],
-      ownerId: "owner-321"
     },
     {
       fullName: "Vivek Jain",
@@ -86,7 +82,6 @@ const buyersData = [
       status: Status.Qualified,
       notes: "Interested in a shopping complex",
       tags: ["investment"],
-      ownerId: "owner-654"
     },
     {
       fullName: "Kavita Nair",
@@ -103,7 +98,6 @@ const buyersData = [
       status: Status.New,
       notes: "First-time renter, unsure of location",
       tags: ["starter"],
-      ownerId: "owner-987"
     },
     {
       fullName: "Saurabh Gupta",
@@ -120,7 +114,6 @@ const buyersData = [
       status: Status.Converted,
       notes: "Ready to close deal",
       tags: ["vip"],
-      ownerId: "owner-852"
     },
     {
       fullName: "Deepika Singh",
@@ -137,7 +130,6 @@ const buyersData = [
       status: Status.Contacted,
       notes: "Looking for co-working space",
       tags: ["shared-space"],
-      ownerId: "owner-963"
     },
     {
       fullName: "Harpreet Kaur",
@@ -154,7 +146,6 @@ const buyersData = [
       status: Status.Dropped,
       notes: "Changed priorities",
       tags: ["inactive"],
-      ownerId: "owner-741"
     },
     {
       fullName: "Manoj Patel",
@@ -171,33 +162,33 @@ const buyersData = [
       status: Status.Negotiation,
       notes: "Needs legal documentation",
       tags: ["legal"],
-      ownerId: "owner-258"
     }
   ]
 
 async function main() {
   console.log("Start seeding...")
 
+  const admin = await prisma.user.create({
+    data: {
+      email: 'admin@example.com',
+      name: 'Admin User',
+      role: 'admin',
+    },
+  })
+
   for (const buyerData of buyersData) {
     const buyer = await prisma.buyer.create({
       data: {
         ...buyerData,
+        ownerId: admin.id,
         histories: {
           create: [
             {
-              changedBy: "admin",
+              changedBy: admin.id,
               diff: {
                 fieldChanged: "status",
                 oldValue: "New",
                 newValue: buyerData.status
-              }
-            },
-            {
-              changedBy: "supervisor",
-              diff: {
-                fieldChanged: "budgetMax",
-                oldValue: buyerData.budgetMax ? buyerData.budgetMax - 500000 : null,
-                newValue: buyerData.budgetMax
               }
             }
           ]

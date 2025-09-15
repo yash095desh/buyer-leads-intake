@@ -1,7 +1,7 @@
 // app/buyers/[id]/page.tsx
 import { notFound } from 'next/navigation';
 import axios from 'axios';
-import BuyerProfileClient from '../../../components/BuyerProfileClient';
+import BuyerProfileClient from '@/components/BuyerProfileClient';
 
 interface BuyerWithDetails {
   id: string;

@@ -18,7 +18,7 @@ export default function Header() {
     <header className="flex justify-between items-center px-6 py-4 shadow-md bg-white dark:bg-gray-900">
       <Link href={'/'}>
         <div className="text-xl font-bold text-gray-900 dark:text-white">
-          BuyerLead Intake
+          LeadHub
         </div>
       </Link>
 

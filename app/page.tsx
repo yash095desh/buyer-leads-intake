@@ -1,10 +1,10 @@
 // app/page.tsx
 import { Suspense } from 'react';
-import BuyersFilters from '../components/BuyersFilter';
-import BuyersList from '../components/BuyersList';
-import ExportButton from '../components/ExportButton';
-import ImportButton from '../components/ImportButton';
-import Pagination from '../components/Pagination';
+import BuyersFilters from '@/components/BuyersFilter';
+import BuyersList from '@/components/BuyersList';
+import ExportButton from '@/components/ExportButton';
+import ImportButton from '@/components/ImportButton';
+import Pagination from '@/components/Pagination';
 import axios from 'axios';
 
 interface SearchParams {

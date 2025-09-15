@@ -94,7 +94,7 @@ export default function ImportButton() {
         }, 1000);
       }
 
-    } catch (error: any) {
+    } catch (error) {
       console.error('Import failed:', error);
       
       let errorMessage = 'Import failed. Please try again.';

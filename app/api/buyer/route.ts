@@ -7,7 +7,6 @@ import {
   Source,
   Status,
   Timeline,
-  User,
 } from "@prisma/client";
 import { z } from "zod";
 import { RateLimiterMemory } from "rate-limiter-flexible";
@@ -34,7 +33,7 @@ export async function GET(req: NextRequest) {
 
     const search = searchParams.get("search");
 
-    const where: any = {};
+    const where :any = {};
 
     if (city) where.city = city;
     if (propertyType) where.propertyType = propertyType;
@@ -122,7 +121,7 @@ export async function POST(req: NextRequest) {
         { status: 404 }
       );
     }
-    
+
     try {
       await createLimiter.consume(owner?.id);
     } catch {

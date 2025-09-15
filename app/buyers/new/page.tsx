@@ -84,7 +84,7 @@ export default function CreateBuyerPage() {
   async function onSubmit(data: BuyerFormValues) {
     setIsLoading(true);
     try {
-      let ownerEmail = user?.emailAddresses[0]?.emailAddress || null;
+      const ownerEmail = user?.emailAddresses[0]?.emailAddress || null;
       if(!ownerEmail){
         toast.error("Something went wrong Please login again!")
       }

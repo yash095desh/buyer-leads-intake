@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { BHK, PrismaClient, PropertyType, Purpose, Source, Status, Timeline } from "@prisma/client";
-import { z }from "zod";
+import { z } from "zod";
 
 import { RateLimiterMemory } from "rate-limiter-flexible";
 
@@ -11,13 +11,13 @@ const updateRateLimiter = new RateLimiterMemory({
   duration: 60,
 });
 
-// getting buyer using id
+// GET handler — fetch buyer by id
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await params;
+    const { id } = await context.params;
 
     if (!id) {
       return NextResponse.json(
@@ -68,12 +68,13 @@ const buyerSchema = z.object({
   ownerEmail: z.email(),
 });
 
+// PUT handler — update buyer
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = await params.id;
+    const { id } = await context.params;
     const body = await req.json();
 
     const data = buyerSchema.parse(body);
@@ -92,7 +93,7 @@ export async function PUT(
     }
 
     try {
-      await updateRateLimiter.consume(owner?.id);
+      await updateRateLimiter.consume(owner.id);
     } catch {
       return NextResponse.json(
         { error: "Rate limit exceeded for update" },
@@ -158,7 +159,6 @@ export async function PUT(
       },
     });
 
-    // Create history entry
     await prisma.buyerHistory.create({
       data: {
         buyerId: id,
@@ -182,13 +182,14 @@ export async function PUT(
   }
 }
 
+// DELETE handler — delete buyer
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = params.id;
-    const {ownerEmail} = await req.json();
+    const { id } = await context.params;
+    const { ownerEmail } = await req.json();
 
     const owner = await prisma.user.findUnique({
       where: { email: ownerEmail },
@@ -212,7 +213,6 @@ export async function DELETE(
       );
     }
 
-    
     if (owner.role !== "admin" && existingBuyer.ownerId !== owner.id) {
       return NextResponse.json(
         { error: "Unauthorized to delete this buyer" },
@@ -220,7 +220,6 @@ export async function DELETE(
       );
     }
 
-   
     await prisma.buyerHistory.create({
       data: {
         buyerId: id,
@@ -232,7 +231,6 @@ export async function DELETE(
       },
     });
 
-    
     await prisma.buyer.delete({
       where: { id },
     });
@@ -249,4 +247,3 @@ export async function DELETE(
     );
   }
 }
-

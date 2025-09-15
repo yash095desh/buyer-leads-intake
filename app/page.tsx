@@ -1,4 +1,5 @@
 // app/page.tsx
+import { Suspense } from 'react';
 import BuyersFilters from '@/components/BuyersFilter';
 import BuyersList from '@/components/BuyersList';
 import ExportButton from '@/components/ExportButton';
@@ -67,6 +68,25 @@ async function fetchBuyers(searchParams: SearchParams): Promise<BuyersResponse> 
   }
 }
 
+// Loading component for BuyersFilters
+function BuyersFiltersLoading() {
+  return (
+    <div className="bg-white rounded-lg shadow-sm border p-4 mb-6">
+      <div className="animate-pulse">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+          {/* Search input skeleton */}
+          <div className="h-10 bg-gray-200 rounded-md"></div>
+          {/* Filter dropdowns skeleton */}
+          <div className="h-10 bg-gray-200 rounded-md"></div>
+          <div className="h-10 bg-gray-200 rounded-md"></div>
+          <div className="h-10 bg-gray-200 rounded-md"></div>
+          <div className="h-10 bg-gray-200 rounded-md"></div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 interface HomePageProps {
   searchParams: SearchParams;
 }
@@ -82,12 +102,14 @@ export default async function Dashboard({ searchParams }: HomePageProps) {
           <ExportButton buyers={buyersData.data} />
         </div>
 
-        <BuyersFilters 
-          cities={['Mumbai', 'Delhi', 'Bangalore', 'Pune', 'Chennai']}
-          propertyTypes={['APARTMENT', 'VILLA', 'PLOT', 'COMMERCIAL']}
-          statuses={['ACTIVE', 'INACTIVE', 'CONVERTED']}
-          timelines={['IMMEDIATE', 'WITHIN_3_MONTHS', 'WITHIN_6_MONTHS']}
-        />
+        <Suspense fallback={<BuyersFiltersLoading />}>
+          <BuyersFilters 
+            cities={['Mumbai', 'Delhi', 'Bangalore', 'Pune', 'Chennai']}
+            propertyTypes={['APARTMENT', 'VILLA', 'PLOT', 'COMMERCIAL']}
+            statuses={['ACTIVE', 'INACTIVE', 'CONVERTED']}
+            timelines={['IMMEDIATE', 'WITHIN_3_MONTHS', 'WITHIN_6_MONTHS']}
+          />
+        </Suspense>
 
         <BuyersList buyers={buyersData.data} />
 
@@ -110,12 +132,14 @@ export default async function Dashboard({ searchParams }: HomePageProps) {
           <ExportButton buyers={[]} />
         </div>
 
-        <BuyersFilters 
-          cities={['Mumbai', 'Delhi', 'Bangalore', 'Pune', 'Chennai']}
-          propertyTypes={['APARTMENT', 'VILLA', 'PLOT', 'COMMERCIAL']}
-          statuses={['ACTIVE', 'INACTIVE', 'CONVERTED']}
-          timelines={['IMMEDIATE', 'WITHIN_3_MONTHS', 'WITHIN_6_MONTHS']}
-        />
+        <Suspense fallback={<BuyersFiltersLoading />}>
+          <BuyersFilters 
+            cities={['Mumbai', 'Delhi', 'Bangalore', 'Pune', 'Chennai']}
+            propertyTypes={['APARTMENT', 'VILLA', 'PLOT', 'COMMERCIAL']}
+            statuses={['ACTIVE', 'INACTIVE', 'CONVERTED']}
+            timelines={['IMMEDIATE', 'WITHIN_3_MONTHS', 'WITHIN_6_MONTHS']}
+          />
+        </Suspense>
         
         <div className="text-center py-8">
           <p className="text-gray-500">Unable to load buyer data. Please try refreshing the page.</p>

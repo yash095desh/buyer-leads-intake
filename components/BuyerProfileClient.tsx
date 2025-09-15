@@ -407,7 +407,7 @@ export default function BuyerProfileClient({ buyer }: BuyerProfileClientProps) {
               Delete Buyer Profile
             </DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete <strong>{buyer.fullName}</strong>'s profile? 
+              Are you sure you want to delete <strong>{buyer.fullName}</strong>&apos;s profile? 
               This action cannot be undone and will also delete all associated history.
             </DialogDescription>
           </DialogHeader>

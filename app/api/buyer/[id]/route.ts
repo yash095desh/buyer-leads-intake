@@ -2,7 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { BHK, PrismaClient, PropertyType, Purpose, Source, Status, Timeline } from "@prisma/client";
 import { z }from "zod";
 
+import { RateLimiterMemory } from "rate-limiter-flexible";
+
 const prisma = new PrismaClient();
+
+const updateRateLimiter = new RateLimiterMemory({
+  points: 5,
+  duration: 60,
+});
 
 // getting buyer using id
 export async function GET(
@@ -81,6 +88,15 @@ export async function PUT(
       return NextResponse.json(
         { error: "Owner not found" },
         { status: 401 }
+      );
+    }
+
+    try {
+      await updateRateLimiter.consume(owner?.id);
+    } catch {
+      return NextResponse.json(
+        { error: "Rate limit exceeded for update" },
+        { status: 429 }
       );
     }
 

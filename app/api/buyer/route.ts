@@ -10,8 +10,14 @@ import {
   User,
 } from "@prisma/client";
 import { z } from "zod";
+import { RateLimiterMemory } from "rate-limiter-flexible";
 
 const prisma = new PrismaClient();
+
+const createLimiter = new RateLimiterMemory({
+  points: 5,
+  duration: 60,
+});
 
 export async function GET(req: NextRequest) {
   try {
@@ -101,7 +107,7 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const data = createBuyerSchema.parse(body);
-
+    
     const owner = await prisma.user.findUnique({
       where: {
         email: data.ownerEmail,
@@ -114,6 +120,15 @@ export async function POST(req: NextRequest) {
           error: "Owner not found",
         },
         { status: 404 }
+      );
+    }
+    
+    try {
+      await createLimiter.consume(owner?.id);
+    } catch {
+      return NextResponse.json(
+        { error: "Rate limit exceeded for create" },
+        { status: 429 }
       );
     }
 

@@ -1,10 +1,107 @@
-import Header from "@/components/header";
-import { Button } from "@/components/ui/button";
+// app/page.tsx
+import BuyersFilters from '@/components/BuyersFilter';
+import BuyersList from '@/components/BuyersList';
+import Pagination from '@/components/Pagination';
+import axios from 'axios';
 
-export default function Home() {
-  return (
-    <div className="w-full h-screen">
-      <Header/>
-    </div>
-  );
+interface SearchParams {
+  page?: string;
+  limit?: string;
+  city?: string;
+  propertyType?: string;
+  status?: string;
+  timeline?: string;
+  search?: string;
+}
+
+interface BuyersResponse {
+  page: number;
+  limit: number;
+  total: number;
+  pages: number;
+  data: Array<{
+    id: string;
+    fullName: string;
+    phone: string;
+    city: string;
+    propertyType: string;
+    budgetMin: number;
+    budgetMax: number;
+    timeline: string;
+    status: string;
+    updatedAt: string;
+  }>;
+}
+
+async function fetchBuyers(searchParams: SearchParams): Promise<BuyersResponse> {
+
+  try {
+    const params: Record<string, string> = {};
+
+    if (searchParams.page) params.page = searchParams.page;
+    if (searchParams.limit) params.limit = searchParams.limit;
+    if (searchParams.city) params.city = searchParams.city;
+    if (searchParams.propertyType) params.propertyType = searchParams.propertyType;
+    if (searchParams.status) params.status = searchParams.status;
+    if (searchParams.timeline) params.timeline = searchParams.timeline;
+    if (searchParams.search) params.search = searchParams.search;
+
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+    const apiUrl = `${baseUrl}/api/buyer`;
+
+
+    const response = await axios.get<BuyersResponse>(apiUrl, {
+      params,
+      headers: { 'Cache-Control': 'no-cache' },
+      timeout: 20000,
+    });
+
+    return response.data;
+  } catch (error: any) {
+    if (axios.isAxiosError(error)) {
+      throw new Error(`Failed to fetch buyers: ${error.message}`);
+    }
+    throw new Error('Failed to fetch buyers');
+  }
+}
+
+interface HomePageProps {
+  searchParams: SearchParams;
+}
+
+export default async function Dashboard({ searchParams }: HomePageProps) {
+
+  try {
+    const buyersData = await fetchBuyers( await searchParams);
+
+    return (
+      <div className="container mx-auto p-4 max-w-7xl">
+
+        <BuyersFilters 
+          cities={['Mumbai', 'Delhi', 'Bangalore', 'Pune', 'Chennai']}
+          propertyTypes={['APARTMENT', 'VILLA', 'PLOT', 'COMMERCIAL']}
+          statuses={['ACTIVE', 'INACTIVE', 'CONVERTED']}
+          timelines={['IMMEDIATE', 'WITHIN_3_MONTHS', 'WITHIN_6_MONTHS']}
+        />
+
+        <BuyersList buyers={buyersData.data} />
+
+        <Pagination
+          currentPage={buyersData.page}
+          totalPages={buyersData.pages}
+          total={buyersData.total}
+          limit={buyersData.limit}
+        />
+      </div>
+    );
+  } catch (error) {
+    return (
+      <div className="container mx-auto p-4 max-w-7xl">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Error</h1>
+          <p className="text-red-600">Failed to load buyers data.</p>
+        </div>
+      </div>
+    );
+  }
 }

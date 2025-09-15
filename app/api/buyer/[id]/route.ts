@@ -149,7 +149,6 @@ export async function PUT(
         changedBy: owner.id,
         diff: {
           action: "Updated buyer",
-          changes: data,
         },
       },
     });

@@ -1,6 +1,8 @@
 // app/page.tsx
 import BuyersFilters from '@/components/BuyersFilter';
 import BuyersList from '@/components/BuyersList';
+import ExportButton from '@/components/ExportButton';
+import ImportButton from '@/components/ImportButton';
 import Pagination from '@/components/Pagination';
 import axios from 'axios';
 
@@ -14,27 +16,28 @@ interface SearchParams {
   search?: string;
 }
 
+interface Buyer {
+  id: string;
+  fullName: string;
+  phone: string;
+  city: string;
+  propertyType: string;
+  budgetMin: number;
+  budgetMax: number;
+  timeline: string;
+  status: string;
+  updatedAt: string;
+}
+
 interface BuyersResponse {
   page: number;
   limit: number;
   total: number;
   pages: number;
-  data: Array<{
-    id: string;
-    fullName: string;
-    phone: string;
-    city: string;
-    propertyType: string;
-    budgetMin: number;
-    budgetMax: number;
-    timeline: string;
-    status: string;
-    updatedAt: string;
-  }>;
+  data: Buyer[];
 }
 
 async function fetchBuyers(searchParams: SearchParams): Promise<BuyersResponse> {
-
   try {
     const params: Record<string, string> = {};
 
@@ -48,7 +51,6 @@ async function fetchBuyers(searchParams: SearchParams): Promise<BuyersResponse> 
 
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
     const apiUrl = `${baseUrl}/api/buyer`;
-
 
     const response = await axios.get<BuyersResponse>(apiUrl, {
       params,
@@ -70,12 +72,15 @@ interface HomePageProps {
 }
 
 export default async function Dashboard({ searchParams }: HomePageProps) {
-
   try {
-    const buyersData = await fetchBuyers( await searchParams);
+    const buyersData = await fetchBuyers(await searchParams);
 
     return (
       <div className="container mx-auto p-4 max-w-7xl">
+        <div className="flex justify-end items-center gap-4 mb-2">
+          <ImportButton/>
+          <ExportButton buyers={buyersData.data} />
+        </div>
 
         <BuyersFilters 
           cities={['Mumbai', 'Delhi', 'Bangalore', 'Pune', 'Chennai']}
@@ -97,9 +102,23 @@ export default async function Dashboard({ searchParams }: HomePageProps) {
   } catch (error) {
     return (
       <div className="container mx-auto p-4 max-w-7xl">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Error</h1>
-          <p className="text-red-600">Failed to load buyers data.</p>
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Buyers Dashboard</h1>
+            <p className="text-red-600">Failed to load buyers data.</p>
+          </div>
+          <ExportButton buyers={[]} />
+        </div>
+
+        <BuyersFilters 
+          cities={['Mumbai', 'Delhi', 'Bangalore', 'Pune', 'Chennai']}
+          propertyTypes={['APARTMENT', 'VILLA', 'PLOT', 'COMMERCIAL']}
+          statuses={['ACTIVE', 'INACTIVE', 'CONVERTED']}
+          timelines={['IMMEDIATE', 'WITHIN_3_MONTHS', 'WITHIN_6_MONTHS']}
+        />
+        
+        <div className="text-center py-8">
+          <p className="text-gray-500">Unable to load buyer data. Please try refreshing the page.</p>
         </div>
       </div>
     );

@@ -5,6 +5,23 @@ import { z } from "zod";
 
 const prisma = new PrismaClient();
 
+interface CSVRow {
+  fullName: string;
+  email?: string;
+  phone: string;
+  city: string;
+  propertyType: string;
+  bhk?: string;
+  purpose: string;
+  budgetMin?: string;
+  budgetMax?: string;
+  timeline: string;
+  source: string;
+  status?: string;
+  notes?: string;
+  tags?: string;
+}
+
 const buyerSchema = z.object({
   fullName: z.string().min(2).max(80),
   email: z.email().optional(),
@@ -46,7 +63,7 @@ export async function POST(req: NextRequest) {
 
     const content = await file.text();
 
-    const records = parse(content, {
+    const records: CSVRow[] = parse(content, {
       columns: true,
       skip_empty_lines: true,
     });
@@ -60,12 +77,40 @@ export async function POST(req: NextRequest) {
 
     for (let i = 0; i < records.length; i++) {
       const row = records[i];
-      const rowNumber = i + 2; // considering header row is 1
+      const rowNumber = i + 2; // Header is at row 1
 
       try {
-        const data = buyerSchema.parse(row);
+        // Preprocessing with type safety
+        const processedRow: Omit<CSVRow, 'budgetMin' | 'budgetMax' | 'tags'> & {
+          budgetMin?: number;
+          budgetMax?: number;
+          tags?: string[];
+        } = {
+          fullName: row.fullName.trim(),
+          email: row.email?.trim(),
+          phone: row.phone.trim(),
+          city: row.city.trim(),
+          propertyType: row.propertyType.trim(),
+          bhk: row.bhk?.trim(),
+          purpose: row.purpose.trim(),
+          budgetMin: row.budgetMin ? parseInt(row.budgetMin, 10) : undefined,
+          budgetMax: row.budgetMax ? parseInt(row.budgetMax, 10) : undefined,
+          timeline: row.timeline.trim(),
+          source: row.source.trim(),
+          status: row.status?.trim(),
+          notes: row.notes?.trim(),
+          tags: row.tags ? (() => {
+            try {
+              const parsed = JSON.parse(row.tags);
+              return Array.isArray(parsed) ? parsed.map(String) : [];
+            } catch {
+              return [];
+            }
+          })() : []
+        };
 
-        // Validate budgetMin and budgetMax
+        const data = buyerSchema.parse(processedRow);
+
         if (
           data.budgetMin !== undefined &&
           data.budgetMax !== undefined &&
@@ -74,7 +119,6 @@ export async function POST(req: NextRequest) {
           throw new Error("budgetMax must be greater than or equal to budgetMin");
         }
 
-        // Validate bhk for specific property types
         if (
           (data.propertyType === PropertyType.Apartment || data.propertyType === PropertyType.Villa) &&
           !data.bhk

@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useCallback, useState, useTransition } from 'react';
+import { useCallback, useState, useTransition, useEffect, useRef } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -20,12 +20,12 @@ export default function BuyersFilters({
   cities = [],
   propertyTypes = [],
   statuses = [],
-  timelines = []
+  timelines = [],
 }: FiltersProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
-
+  const [isSearching, setIsSearching] = useState(false);
 
   const currentSearch = searchParams.get('search') || '';
   const currentCity = searchParams.get('city') || '';
@@ -34,6 +34,11 @@ export default function BuyersFilters({
   const currentTimeline = searchParams.get('timeline') || '';
 
   const [searchInput, setSearchInput] = useState(currentSearch);
+  
+
+  const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
+  const isMountedRef = useRef(true);
 
   const createQueryString = useCallback(
     (updates: Record<string, string | null>) => {
@@ -54,6 +59,50 @@ export default function BuyersFilters({
     [searchParams]
   );
 
+
+  const debouncedSearch = useCallback(
+    (searchValue: string) => {
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current);
+      }
+      setIsSearching(true);
+
+
+      debounceTimeoutRef.current = setTimeout(() => {
+        if (isMountedRef.current) {
+          startTransition(() => {
+            router.push(`/?${createQueryString({ search: searchValue || null })}`);
+            setIsSearching(false);
+          });
+        }
+      }, 300);
+    },
+    [createQueryString, router]
+  );
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setSearchInput(value);
+    
+    debouncedSearch(value);
+  };
+
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (debounceTimeoutRef.current) {
+      clearTimeout(debounceTimeoutRef.current);
+      debounceTimeoutRef.current = null;
+    }
+    
+    setIsSearching(true);
+    startTransition(() => {
+      router.push(`/?${createQueryString({ search: searchInput || null })}`);
+      setIsSearching(false);
+    });
+  };
+
   const handleFilterChange = (key: string, value: string) => {
     const newValue = value === 'all' ? '' : value;
     startTransition(() => {
@@ -61,26 +110,45 @@ export default function BuyersFilters({
     });
   };
 
-  const handleSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    startTransition(() => {
-      router.push(`/?${createQueryString({ search: searchInput || null })}`);
-    });
-  };
-
   const clearAllFilters = () => {
+    if (debounceTimeoutRef.current) {
+      clearTimeout(debounceTimeoutRef.current);
+      debounceTimeoutRef.current = null;
+    }
+    
     setSearchInput('');
+    setIsSearching(false);
     startTransition(() => {
       router.push('/');
     });
   };
 
   const removeFilter = (key: string) => {
-    if (key === 'search') setSearchInput('');
+    if (key === 'search') {
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current);
+        debounceTimeoutRef.current = null;
+      }
+      setSearchInput('');
+      setIsSearching(false);
+    }
     startTransition(() => {
       router.push(`/?${createQueryString({ [key]: null })}`);
     });
   };
+
+  useEffect(() => {
+    setSearchInput(currentSearch);
+  }, [currentSearch]);
+
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const activeFilters = [
     { key: 'search', value: currentSearch, label: `Search: "${currentSearch}"` },
@@ -89,6 +157,8 @@ export default function BuyersFilters({
     { key: 'status', value: currentStatus, label: `Status: ${currentStatus}` },
     { key: 'timeline', value: currentTimeline, label: `Timeline: ${currentTimeline}` },
   ].filter(filter => filter.value);
+
+  const showLoadingState = isPending || isSearching;
 
   return (
     <div>
@@ -101,16 +171,16 @@ export default function BuyersFilters({
                 type="text"
                 placeholder="Search by name, phone, or email..."
                 value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
+                onChange={handleSearchChange}
                 className="pl-10 pr-10"
               />
               <Button
                 type="submit"
                 size="sm"
                 className="absolute right-1 top-1/2 transform -translate-y-1/2 h-7 w-7 p-0"
-                disabled={isPending}
+                disabled={showLoadingState}
               >
-                {isPending ? (
+                {showLoadingState ? (
                   <Loader2 className="h-3 w-3 animate-spin" />
                 ) : (
                   <Search className="h-3 w-3" />
@@ -223,10 +293,10 @@ export default function BuyersFilters({
           </div>
         )}
 
-        {isPending && (
+        {showLoadingState && (
           <div className="flex items-center gap-2 text-sm text-gray-500 mt-2">
             <Loader2 className="h-4 w-4 animate-spin" />
-            Loading...
+            {isSearching ? 'Searching...' : 'Loading...'}
           </div>
         )}
       </div>

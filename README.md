@@ -1,36 +1,120 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Buyer Leads App
 
-## Getting Started
+A simple **Buyer Lead Intake** application built with **Next.js**, **TypeScript**, **Prisma ORM**, and **Neon PostgreSQL**. It allows users to capture, list, and manage buyer leads with validation, filtering, search, and CSV import/export functionality.
 
-First, run the development server:
+This project was built as an assignment and demonstrates best practices in validation, server-side rendering, transactional data handling, and ownership enforcement.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+---
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+##  Deployed URL
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+You can access the live version of the app here:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+[https://buyer-leads-intake.vercel.app](https://buyer-leads-intake.vercel.app)
 
-## Learn More
+---
 
-To learn more about Next.js, take a look at the following resources:
+##  Tech Stack
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- **Frontend**: Next.js (App Router) + TypeScript
+- **Database**: PostgreSQL (via [Neon](https://neon.tech)) + Prisma ORM with migrations
+- **Validation**: Zod (client and server)
+- **Authentication**: Basic authentication setup using clerk.js
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+## Features Implemented
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+✔ Create, edit, and delete buyer leads  
+✔ Real pagination and server-rendered search/filter  
+✔ URL-synced filters with sorting and debouncing   
+✔ CSV import with row validation and error display  
+✔ CSV export respecting current filters and sorting  
+✔ Buyer history tracking on edits  
+✔ Ownership enforced at server layer  
+✔ Simple rate limiting for create/update actions  
+✔ Accessibility improvements with form labels and error handling  
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+
+## Setup Instructions
+
+### Prerequisites
+- Node.js v18+ installed
+- PostgreSQL via [Neon](https://neon.tech) account set up
+
+### Steps
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/yash095desh/buyer-leads-intake.git
+   cd buyer-leads-intake
+   ```
+2. Install dependencies:
+  ```bash
+  npm install
+  ```
+
+3. Configure environment variables:
+  Create a .env file with the following:
+
+  ```bash
+  DATABASE_URL="postgresql://<username>:<password>@<host>:<port>/<database>"
+  NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=your_clerk_publishable_key
+  CLERK_SECRET_KEY=your_clerk_secret_key
+  
+  NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in
+  NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up
+  NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL=/
+  NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL=/
+  
+  NEXT_PUBLIC_BASE_URL=http://localhost:3000
+  ```
+
+
+4. Run Prisma migrations:
+
+  ```bash
+  npx prisma migrate deploy
+  ```
+
+5. Seed the database with sample data:
+
+  ```bash
+  npx prisma db seed
+  ```
+
+6. Run the development server:
+
+  ```bash
+  npm run dev
+  ```
+
+Access the app at http://localhost:3000
+
+##  Design Notes
+
+###  Validation
+
+- Validation is handled by Zod both on the client and the server.
+- All required and conditional fields (e.g., bhk required for certain property types) are validated consistently.
+- Budget fields are cross-validated to ensure budgetMax ≥ budgetMin.
+
+###  SSR vs Client
+
+- Listing pages are server-rendered (SSR) with real pagination and filters synced via URL.
+- Debounced search is performed with client-side handling but updates SSR parameters.
+
+###  Ownership Enforcement
+
+- All editing/deleting operations are validated at the server layer.
+- Users can only modify records where ownerId matches their session.
+- An optional admin role can be added to override this (not implemented in this version).
+
+###  CSV Import/Export
+
+- Errors are displayed per row with actionable messages.
+- Unknown enums or invalid data cause row-specific errors without affecting other rows.
+- Export respects applied filters and sorting.
+
+
